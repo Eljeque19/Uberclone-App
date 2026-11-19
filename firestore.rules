@@ -1,0 +1,16 @@
+trservice cloud.firestore {
+  match /databases/{database}/documents {
+    match /drivers/{id} {
+      allow read: if request.auth != null;
+      allow create: if request.auth.uid == id && request.resource.data.status == 'pending';
+      // El conductor no puede aprobarse a sí mismo
+      allow update: if request.auth.uid == id && request.resource.data.status == resource.data.status;
+    }
+    match /trips/{id} {
+      allow read: if request.auth != null;
+      // Demo: el simulador de pasajeros crea viajes en estado 'requested'
+      allow create: if request.auth != null && request.resource.data.status == 'requested';
+      allow update: if request.auth != null && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['paymentId']);
+    }
+  }
+}
